@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Challenging Puzzle</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;700&family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand display">🧩 <span data-i18n="site_name">Challenging Puzzle</span></div>
+      <div class="right">
+        <div id="authStatus"></div>
+        <button class="lang-toggle" onclick="toggleLang()">বাংলা</button>
+      </div>
+    </div>
+
+    <p style="color:var(--text-muted);" data-i18n="home_subtitle">Pick a puzzle and start playing</p>
+
+    <div class="menu-grid">
+      <a class="menu-item" href="sudoku.html">
+        <div class="icon">🔢</div>
+        <div class="label" data-i18n="menu_sudoku">Sudoku</div>
+      </a>
+
+      <div class="menu-item disabled">
+        <div class="icon">🧠</div>
+        <div class="label" data-i18n="menu_memory">Memory Match</div>
+        <div class="soon" data-i18n="coming_soon">Coming soon</div>
+      </div>
+
+      <div class="menu-item disabled">
+        <div class="icon">🔤</div>
+        <div class="label" data-i18n="menu_word">Word Puzzle</div>
+        <div class="soon" data-i18n="coming_soon">Coming soon</div>
+      </div>
+
+      <div class="menu-item disabled">
+        <div class="icon">🖼️</div>
+        <div class="label" data-i18n="menu_jigsaw">Jigsaw Puzzle</div>
+        <div class="soon" data-i18n="coming_soon">Coming soon</div>
+      </div>
+
+      <a class="menu-item" href="leaderboard.html">
+        <div class="icon">🏆</div>
+        <div class="label" data-i18n="menu_leaderboard">Leaderboard</div>
+      </a>
+
+      <a class="menu-item" href="profile.html">
+        <div class="icon">👤</div>
+        <div class="label" data-i18n="menu_profile">My Profile</div>
+      </a>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    renderAuthStatus('authStatus');
+  </script>
+</body>
+</html>

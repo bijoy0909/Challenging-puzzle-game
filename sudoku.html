@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudoku - Challenging Puzzle</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;700&family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a class="brand display" href="index.html">🧩 <span data-i18n="sudoku_title">Sudoku</span></a>
+      <div class="right">
+        <div id="authStatus"></div>
+        <button class="lang-toggle" onclick="toggleLang()">বাংলা</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="difficulty-row" style="margin-bottom:14px;">
+        <button class="btn-sm difficulty-btn" data-level="easy" data-i18n="difficulty_easy">Easy</button>
+        <button class="btn-sm difficulty-btn" data-level="medium" data-i18n="difficulty_medium">Medium</button>
+        <button class="btn-sm difficulty-btn" data-level="hard" data-i18n="difficulty_hard">Hard</button>
+        <button class="btn-sm btn-outline" id="newGameBtn" data-i18n="new_game">New Game</button>
+      </div>
+
+      <div class="sudoku-wrap">
+        <div class="game-stats">
+          <div><span data-i18n="time_label">Time</span>: <b id="timeDisplay">00:00</b></div>
+          <div><span data-i18n="mistakes_label">Mistakes</span>: <b id="mistakesDisplay">0</b></div>
+        </div>
+
+        <div class="sudoku-board" id="board"></div>
+
+        <div class="numpad" id="numpad"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Win overlay -->
+  <div class="overlay hidden" id="winOverlay">
+    <div class="card">
+      <h2 data-i18n="win_title">Solved!</h2>
+      <div class="big-time" id="finalTime">00:00</div>
+      <div><span data-i18n="win_score">Score</span>: <b id="finalScore">0</b></div>
+      <div class="msg" id="saveMsg" style="margin-top:10px;"></div>
+      <button class="btn-primary" style="width:100%; margin-top:16px;" id="playAgainBtn" data-i18n="play_again">Play Again</button>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    renderAuthStatus('authStatus');
+
+    // ---------------- Sudoku generation ----------------
+    const EMPTY_COUNTS = { easy: 35, medium: 45, hard: 55 };
+    const SCORE_BASE = { easy: 500, medium: 800, hard: 1200 };
+
+    let solution = [];
+    let board = [];     // current state (numbers, 0 = empty)
+    let givenMask = []; // true = fixed clue cell
+
+    let selectedCell = null;
+    let mistakes = 0;
+    let timerInterval = null;
+    let seconds = 0;
+    let currentDifficulty = 'easy';
+    let gameOver = false;
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function generateSolution() {
+      const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
+
+      function isValid(r, c, val) {
+        for (let i = 0; i < 9; i++) {
+          if (grid[r][i] === val || grid[i][c] === val) return false;
+        }
+        const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+        for (let i = br; i < br + 3; i++) {
+          for (let j = bc; j < bc + 3; j++) {
+            if (grid[i][j] === val) return false;
+          }
+        }
+        return true;
+      }
+
+      function fill(pos) {
+        if (pos === 81) return true;
+        const r = Math.floor(pos / 9), c = pos % 9;
+        const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+        for (const val of nums) {
+          if (isValid(r, c, val)) {
+            grid[r][c] = val;
+            if (fill(pos + 1)) return true;
+            grid[r][c] = 0;
+          }
+        }
+        return false;
+      }
+
+      fill(0);
+      return grid;
+    }
+
+    function generatePuzzle(difficulty) {
+      solution = generateSolution();
+      board = solution.map(row => row.slice());
+      givenMask = Array.from({ length: 9 }, () => Array(9).fill(true));
+
+      let toRemove = EMPTY_COUNTS[difficulty];
+      const cells = shuffle(
+        Array.from({ length: 81 }, (_, i) => [Math.floor(i/9), i%9])
+      );
+
+      let i = 0;
+      while (toRemove > 0 && i < cells.length) {
+        const [r, c] = cells[i];
+        board[r][c] = 0;
+        givenMask[r][c] = false;
+        toRemove--;
+        i++;
+      }
+    }
+
+    // ---------------- Rendering ----------------
+    function renderBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'sudoku-cell';
+          if (givenMask[r][c]) cell.classList.add('given');
+          if (r === 2 || r === 5) cell.classList.add('sudoku-row-thick');
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+
+          const val = board[r][c];
+          cell.textContent = val === 0 ? '' : val;
+
+          cell.addEventListener('click', () => selectCell(r, c));
+          boardEl.appendChild(cell);
+        }
+      }
+      highlightSelection();
+    }
+
+    function selectCell(r, c) {
+      if (givenMask[r][c]) {
+        selectedCell = { r, c, given: true };
+      } else {
+        selectedCell = { r, c, given: false };
+      }
+      highlightSelection();
+    }
+
+    function highlightSelection() {
+      const cellsEls = document.querySelectorAll('.sudoku-cell');
+      cellsEls.forEach(el => el.classList.remove('selected', 'same-value'));
+
+      if (!selectedCell) return;
+
+      const { r, c } = selectedCell;
+      const val = board[r][c];
+
+      cellsEls.forEach(el => {
+        const er = parseInt(el.dataset.r), ec = parseInt(el.dataset.c);
+        if (er === r && ec === c) el.classList.add('selected');
+        else if (val !== 0 && board[er][ec] === val) el.classList.add('same-value');
+      });
+    }
+
+    function renderNumpad() {
+      const pad = document.getElementById('numpad');
+      pad.innerHTML = '';
+      for (let n = 1; n <= 9; n++) {
+        const btn = document.createElement('button');
+        btn.textContent = n;
+        btn.addEventListener('click', () => inputNumber(n));
+        pad.appendChild(btn);
+      }
+      const eraseBtn = document.createElement('button');
+      eraseBtn.className = 'erase';
+      eraseBtn.textContent = '✕';
+      eraseBtn.addEventListener('click', () => inputNumber(0));
+      pad.appendChild(eraseBtn);
+    }
+
+    function inputNumber(num) {
+      if (gameOver || !selectedCell || selectedCell.given) return;
+      const { r, c } = selectedCell;
+
+      board[r][c] = num;
+
+      const cellEl = document.querySelector(`.sudoku-cell[data-r="${r}"][data-c="${c}"]`);
+      cellEl.textContent = num === 0 ? '' : num;
+      cellEl.classList.remove('error');
+
+      if (num !== 0 && num !== solution[r][c]) {
+        cellEl.classList.add('error');
+        mistakes++;
+        document.getElementById('mistakesDisplay').textContent = mistakes;
+      }
+
+      highlightSelection();
+      checkWin();
+    }
+
+    function checkWin() {
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (board[r][c] !== solution[r][c]) return false;
+        }
+      }
+      finishGame();
+      return true;
+    }
+
+    // ---------------- Timer ----------------
+    function startTimer() {
+      seconds = 0;
+      document.getElementById('timeDisplay').textContent = '00:00';
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('timeDisplay').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+    }
+
+    // ---------------- Game lifecycle ----------------
+    function newGame(difficulty) {
+      currentDifficulty = difficulty;
+      document.querySelectorAll('.difficulty-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.level === difficulty);
+      });
+
+      generatePuzzle(difficulty);
+      selectedCell = null;
+      mistakes = 0;
+      gameOver = false;
+      document.getElementById('mistakesDisplay').textContent = '0';
+      document.getElementById('winOverlay').classList.add('hidden');
+
+      renderBoard();
+      renderNumpad();
+      startTimer();
+    }
+
+    async function finishGame() {
+      gameOver = true;
+      stopTimer();
+
+      const score = Math.max(
+        100,
+        SCORE_BASE[currentDifficulty] - seconds * 2 - mistakes * 20
+      );
+
+      const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const s = String(seconds % 60).padStart(2, '0');
+
+      document.getElementById('finalTime').textContent = `${m}:${s}`;
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('winOverlay').classList.remove('hidden');
+
+      const saveMsgEl = document.getElementById('saveMsg');
+      const user = await getCurrentUser();
+
+      if (!user) {
+        saveMsgEl.textContent = t('login_to_save');
+        saveMsgEl.className = 'msg';
+        return;
+      }
+
+      const { error } = await supabaseClient.from('scores').insert({
+        user_id: user.id,
+        game_name: 'sudoku',
+        difficulty: currentDifficulty,
+        time_seconds: seconds,
+        score: score
+      });
+
+      if (error) {
+        saveMsgEl.textContent = error.message;
+        saveMsgEl.className = 'msg error';
+      } else {
+        saveMsgEl.textContent = t('score_saved');
+        saveMsgEl.className = 'msg success';
+      }
+    }
+
+    // ---------------- Event bindings ----------------
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', () => newGame(btn.dataset.level));
+    });
+    document.getElementById('newGameBtn').addEventListener('click', () => newGame(currentDifficulty));
+    document.getElementById('playAgainBtn').addEventListener('click', () => newGame(currentDifficulty));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '1' && e.key <= '9') inputNumber(parseInt(e.key));
+      if (e.key === 'Backspace' || e.key === 'Delete') inputNumber(0);
+    });
+
+    // Start with Easy
+    newGame('easy');
+  </script>
+</body>
+</html>

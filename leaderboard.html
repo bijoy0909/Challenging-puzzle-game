@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard - Challenging Puzzle</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;700&family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a class="brand display" href="index.html">🧩 <span data-i18n="site_name">Challenging Puzzle</span></a>
+      <div class="right">
+        <div id="authStatus"></div>
+        <button class="lang-toggle" onclick="toggleLang()">বাংলা</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="leaderboard_title">Leaderboard</h2>
+      <p style="color:var(--text-muted); font-size:13px;" data-i18n="leaderboard_subtitle">Best Sudoku times</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="th_rank">#</th>
+            <th data-i18n="th_player">Player</th>
+            <th data-i18n="th_difficulty">Level</th>
+            <th data-i18n="th_time">Time</th>
+            <th data-i18n="th_score">Score</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <div class="msg" id="emptyMsg"></div>
+    </div>
+
+    <p style="text-align:center; margin-top:14px;">
+      <a href="index.html" data-i18n="back_to_home">Back to Home</a>
+    </p>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    renderAuthStatus('authStatus');
+
+    async function loadLeaderboard() {
+      const { data, error } = await supabaseClient
+        .from('scores')
+        .select('score, time_seconds, difficulty, profiles(username)')
+        .eq('game_name', 'sudoku')
+        .order('score', { ascending: false })
+        .limit(20);
+
+      const rowsEl = document.getElementById('rows');
+      const emptyEl = document.getElementById('emptyMsg');
+
+      if (error || !data || data.length === 0) {
+        emptyEl.textContent = t('no_scores');
+        return;
+      }
+
+      const currentUser = await getCurrentUser();
+
+      data.forEach((row, i) => {
+        const m = String(Math.floor(row.time_seconds / 60)).padStart(2, '0');
+        const s = String(row.time_seconds % 60).padStart(2, '0');
+        const name = row.profiles ? row.profiles.username : '—';
+
+        const tr = document.createElement('tr');
+        if (currentUser && row.profiles && name) {
+          // highlight current user's rows (best effort, by username match not strictly unique)
+        }
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${escapeHtml(name)}</td>
+          <td>${escapeHtml(row.difficulty || '-')}</td>
+          <td>${m}:${s}</td>
+          <td>${row.score}</td>
+        `;
+        rowsEl.appendChild(tr);
+      });
+    }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>
