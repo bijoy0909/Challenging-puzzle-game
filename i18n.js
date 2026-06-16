@@ -33,6 +33,11 @@ const translations = {
 
     // Sudoku
     sudoku_title: "Sudoku",
+    how_to_play: "How to play",
+    rule_1: "Tap an empty cell, then tap a number below to fill it in.",
+    rule_2: "Each row, column and 3×3 box must contain 1–9 with no repeats.",
+    rule_3: "Tap a filled cell to highlight every cell with the same number.",
+    rule_4: "A red number means it doesn't belong there — tap ✕ to erase it.",
     difficulty_easy: "Easy",
     difficulty_medium: "Medium",
     difficulty_hard: "Hard",
@@ -45,6 +50,8 @@ const translations = {
     login_to_save: "Log in to save your score on the leaderboard.",
     score_saved: "Score saved to leaderboard!",
     play_again: "Play Again",
+    how_to_play_title: "How to Play",
+    how_to_play_text: "Tap an empty cell, then tap a number (1-9) to fill it in. Fill the grid so every row, column, and 3x3 box contains the numbers 1-9 without repeating. Wrong numbers turn red and count as a mistake. Solve the whole grid to win!",
 
     // Leaderboard
     leaderboard_title: "Leaderboard",
@@ -56,8 +63,20 @@ const translations = {
     th_score: "Score",
     no_scores: "No scores yet. Be the first!",
 
-    // Profile
-    profile_title: "My Profile",
+    // Instructions
+    how_to_play: "How to Play",
+    close: "Got it!",
+    htp_1: "The board has 9×9 cells divided into 9 boxes.",
+    htp_2: "Fill every empty cell with a number from 1 to 9.",
+    htp_3: "Each row must contain digits 1–9 with no repeats.",
+    htp_4: "Each column must contain digits 1–9 with no repeats.",
+    htp_5: "Each 3×3 box must contain digits 1–9 with no repeats.",
+    htp_6: "Tap a cell, then tap a number below to fill it in.",
+    htp_7: "Press ✕ to erase a cell.",
+    htp_8: "Fewer mistakes and faster time = higher score!",
+    menu_sudoku_desc: "Fill the 9×9 grid so every row, column and box has digits 1–9.",
+    menu_leaderboard_desc: "See the top scores from all players.",
+    menu_profile_desc: "View your score history.",
     your_scores: "Your Scores",
     no_personal_scores: "You haven't played yet.",
     please_login: "Please log in to view your profile."
@@ -115,6 +134,21 @@ const translations = {
     th_time: "সময়",
     th_score: "স্কোর",
     no_scores: "এখনো কোনো স্কোর নেই। প্রথম হোন!",
+
+    // Instructions
+    how_to_play: "কীভাবে খেলবেন",
+    close: "বুঝেছি!",
+    htp_1: "বোর্ডে ৯×৯ ঘর আছে, ৯টি ৩×৩ বক্সে ভাগ করা।",
+    htp_2: "প্রতিটি খালি ঘরে ১ থেকে ৯ এর মধ্যে একটি সংখ্যা দিন।",
+    htp_3: "প্রতিটি সারিতে ১–৯ সংখ্যা একবারই থাকবে।",
+    htp_4: "প্রতিটি কলামে ১–৯ সংখ্যা একবারই থাকবে।",
+    htp_5: "প্রতিটি ৩×৩ বক্সে ১–৯ সংখ্যা একবারই থাকবে।",
+    htp_6: "একটি ঘরে ট্যাপ করুন, তারপর নিচের নম্বরে ট্যাপ করুন।",
+    htp_7: "✕ চাপলে ঘর মুছে যাবে।",
+    htp_8: "কম ভুল ও কম সময় = বেশি স্কোর!",
+    menu_sudoku_desc: "৯×৯ গ্রিড পূরণ করুন যেন প্রতি সারি, কলাম ও বক্সে ১–৯ থাকে।",
+    menu_leaderboard_desc: "সব খেলোয়াড়ের সেরা স্কোর দেখুন।",
+    menu_profile_desc: "আপনার স্কোর হিস্টরি দেখুন।",
 
     profile_title: "আমার প্রোফাইল",
     your_scores: "আপনার স্কোরসমূহ",
